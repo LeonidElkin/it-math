@@ -40,34 +40,51 @@ void matrix_init(double **u) {
 }
 
 void poisson(double eps, double **u) {
-	double dmax, temp, d, dmax_temp, dm;
-	int i, j, cnt = 0;
+	double dmax, temp, d, dmax_temp, dm[N + 1];
+	int i, nx, j, cnt = 0;
+
 	do {
-		cnt++;
+
 		dmax = 0;
-		#pragma omp parallel for shared(u, dmax) private(i, j, temp, d, dmax_temp, dm)
-		for (i = 1; i < N + 1; i++) {
 
-			dm = 0;
-
-			for (j = 1; j < N + 1; j++) {
+		for (nx = 1; nx < N + 1; nx++) {
+			dm[nx] = 0;
+			#pragma omp parallel for shared(u, nx, dm) private(i, j, temp, d)
+			for (i = 1; i < nx + 1; i++) {
+				j = nx + 1 - i;
 				temp = u[i][j];
 				u[i][j] = 0.25 * (u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1]);
 				d = fabs(temp - u[i][j]);
-				if (dm < d) dm = d;
+				if (dm[i] < d) dm[i] = d;
 			}
+		}
 
+		for (nx = N - 1; nx > 0; nx--) {
+			dm[nx] = 0;
+			#pragma omp parallel for shared(u, nx, dm) private(i, j, temp, d)
+			for (i = N - nx + 1; i < N + 1; i++) {
+				j = 2 * N - nx - i + 1;
+				temp = u[i][j];
+				u[i][j] = 0.25 * (u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1]);
+				d = fabs(temp - u[i][j]);
+				if (dm[i] < d) dm[i] = d;
+			}
+		}
+
+		#pragma omp parrallel for shared(n, dm, dmax) private(i)
+		for (i = 1; i < nx + 1; i++) {
 			while (true) {
 				dmax_temp = dmax;
-				if (dmax_temp < dm) {
-					if (cas(&dmax, dmax_temp, dm))
+				if (dmax_temp < dm[i]) {
+					if (cas(&dmax, dmax_temp, dm[i]))
 						break;
 				} else
 					break;
 			}
 		}
+
 	} while (dmax > eps);
-	printf("%d\n", cnt);
+
 }
 
 double **matrix_malloc() {
@@ -77,7 +94,7 @@ double **matrix_malloc() {
 	return u;
 }
 
-void matrix_free(double** u) {
+void matrix_free(double **u) {
 	for (int i = 0; i < N + 2; i++)
 		free(u[i]);
 	free(u);
@@ -91,14 +108,12 @@ int main() {
 	matrix_init(u);
 	poisson(EPS, u);
 
+	for (int i = 0; i < N + 2; i++) {
+		for (int j = 0; j < N + 2; j++) {
+			printf("%.2f ", u[i][j]);
+		}
+		printf("\n");
+	}
+
 	matrix_free(u);
-	
-
-
-	// for (int i = 0; i < N + 2; i++) {
-	// 	for (int j = 0; j < N + 2; j++) {
-	// 		printf("%.2f ", u[i][j]);
-	// 	}
-	// 	printf("\n");
-	// }
 }
