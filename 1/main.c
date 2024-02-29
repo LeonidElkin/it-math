@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define N 100
-#define EPS 0.0001
+#define N 500
+#define EPS 0.00001
 #define SEED 0xebac0c
 #define BLOCK_SIZE 64
 
@@ -83,8 +83,8 @@ void poisson(double eps, double **u) {
 		}
 
 		for (int nx = num_blocks - 2; nx > -1; nx--) {
-			#pragma omp parallel for shared(u, nx, dm) private(i, j, temp, d)
-			for (i = 0; i < nx + 1; i++) {
+			#pragma omp parallel for shared(nx, dm) private(i, j, d)
+			for (i = num_blocks - nx - 1; i < num_blocks; i++) {
 				j = 2 * (num_blocks - 1) - nx - i; 
 				d = block(i, j, u);
 				if (dm[nx] < d) dm[nx] = d;
