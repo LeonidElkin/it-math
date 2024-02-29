@@ -8,6 +8,7 @@
 #define N 100
 #define EPS 0.0001
 #define SEED 0xebac0c
+#define BLOCK_SIZE 64
 
 bool cas(double *number, double old, double new) {
 	if (*number != old)
@@ -39,39 +40,59 @@ void matrix_init(double **u) {
 	}
 }
 
-void poisson(double eps, double **u) {
-	double dmax, temp, d, dmax_temp, dm[N + 1];
-	int i, nx, j, cnt = 0;
+int min(int x, int y) {
+	return (x < y) ? x : y;
+}
+
+double block(int block_x, int block_y, double **u) {
+
+	int actual_border_x = min(BLOCK_SIZE * (block_x + 1), N) + 1;
+	int actual_border_y = min(BLOCK_SIZE * (block_y + 1), N) + 1;
+	double temp, delta, d, dm = 0;
 	
+	for (int i = 1 + BLOCK_SIZE * block_x; i < actual_border_x; i++) {
+		for (int j  = 1 + BLOCK_SIZE * block_y; j < actual_border_y; j++) {
+			temp = u[i][j];
+			u[i][j] = 0.25 * (u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1]);
+			d = fabs(temp - u[i][j]);
+			if (dm < d) dm = d;
+		}
+	}
+	
+	return dm;
+
+}
+
+void poisson(double eps, double **u) {
+	int i, j;
+	int num_blocks = (N % BLOCK_SIZE) > 0 ? N / BLOCK_SIZE + 1 : N / BLOCK_SIZE;
+	double dmax, temp, d, dmax_temp, dm[num_blocks];
+
 	do {
 
 		dmax = 0;
 
-		for (nx = 1; nx < N + 1; nx++) {
+		for (int nx = 0; nx < num_blocks; nx++) {
 			dm[nx] = 0;
-			#pragma omp parallel for shared(u, nx, dm) private(i, j, temp, d)
-			for (i = 1; i < nx + 1; i++) {
-				j = nx + 1 - i;
-				temp = u[i][j];
-				u[i][j] = 0.25 * (u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1]);
-				d = fabs(temp - u[i][j]);
-				if (dm[i] < d) dm[i] = d;
+			#pragma omp parallel for shared(nx, dm) private(i, j, d)
+			for (i = 0; i < nx + 1; i++) {
+				j = nx - i;
+				d = block(i, j, u);
+				if (dm[nx] < d) dm[nx] = d;
 			}
 		}
 
-		for (nx = N - 1; nx > 0; nx--) {
+		for (int nx = num_blocks - 2; nx > -1; nx--) {
 			#pragma omp parallel for shared(u, nx, dm) private(i, j, temp, d)
-			for (i = N - nx + 1; i < N + 1; i++) {
-				j = 2 * N - nx - i + 1;
-				temp = u[i][j];
-				u[i][j] = 0.25 * (u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1]);
-				d = fabs(temp - u[i][j]);
-				if (dm[i] < d) dm[i] = d;
+			for (i = 0; i < nx + 1; i++) {
+				j = 2 * (num_blocks - 1) - nx - i; 
+				d = block(i, j, u);
+				if (dm[nx] < d) dm[nx] = d;
 			}
 		}
 
-		#pragma omp parrallel for shared(dm, dmax) private(i)
-		for (i = 1; i < N + 1; i++) {
+		#pragma omp parrallel for shared(dm, dmax) private(i, dmax_temp)
+		for (i = 1; i < num_blocks; i++) {
 			while (true) {
 				dmax_temp = dmax;
 				if (dmax_temp < dm[i]) {
