@@ -42,7 +42,7 @@ void matrix_init(double **u) {
 void poisson(double eps, double **u) {
 	double dmax, temp, d, dmax_temp, dm[N + 1];
 	int i, nx, j, cnt = 0;
-
+	
 	do {
 
 		dmax = 0;
@@ -60,7 +60,6 @@ void poisson(double eps, double **u) {
 		}
 
 		for (nx = N - 1; nx > 0; nx--) {
-			dm[nx] = 0;
 			#pragma omp parallel for shared(u, nx, dm) private(i, j, temp, d)
 			for (i = N - nx + 1; i < N + 1; i++) {
 				j = 2 * N - nx - i + 1;
@@ -71,8 +70,8 @@ void poisson(double eps, double **u) {
 			}
 		}
 
-		#pragma omp parrallel for shared(n, dm, dmax) private(i)
-		for (i = 1; i < nx + 1; i++) {
+		#pragma omp parrallel for shared(dm, dmax) private(i)
+		for (i = 1; i < N + 1; i++) {
 			while (true) {
 				dmax_temp = dmax;
 				if (dmax_temp < dm[i]) {
