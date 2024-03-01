@@ -7,10 +7,20 @@
 #include <string.h>
 
 #define DEFAULT_GSZ 100
-#define DEFAULT_EPS 0.1
+#define DEFAULT_EPS 0.000001
 #define SEED 0xebac0c
-#define DEFAULT_BSZ 32
+#define DEFAULT_BSZ 64
 #define MAX_NUM_OF_ARGS 4
+
+typedef double (*fun_xy)(double, double);
+
+typedef struct grid {
+	double eps;
+	size_t grid_size;
+	size_t block_size;
+	fun_xy f;
+	double h;
+} grid_t;
 
 enum {
 	NUM_OF_ARGUMENT_ERROR = -1,
@@ -18,6 +28,17 @@ enum {
 	LISTED_TWICE_ERROR = -3,
 	INCORRECT_ARGUMENT_VALUE = -4
 };
+
+double f(double x, double y) {
+	return 0.0;
+}
+
+double g(double x, double y) {
+	if (y == 0) return 100 - 200 * x;
+	if (x == 0) return 100 - 200 * y;
+	if (y == 1) return 200 * x - 100;
+	if (x == 1) return 200 * y - 100;
+}
 
 bool cas(double *number, double old, double new) {
 	if (*number != old)
@@ -32,37 +53,35 @@ double randfrom(double min, double max) {
 	return min + (rand() / div);
 }
 
-void matrix_init(double **u, size_t grid_size) {
+void matrix_init(double **u, size_t grid_size, double h, fun_xy g) {
 	double x, y;
 
 	for (int i = 0; i < grid_size + 2; i++) {
 		for (int j = 0; j < grid_size + 2; j++) {
-			x = (double) i / (grid_size + 1);
-			y = (double) j / (grid_size + 1);
-			if (x == 0 || x == 1)
-				u[i][j] = pow(-1, x) * 100 - pow(-1, x) * 200 * y;
-			else if (y == 0 || y == 1)
-				u[i][j] = pow(-1, y) * 100 - pow(-1, y) * 200 * x;
-			else
-				u[i][j] = randfrom(-100, 100);
+			x = i * h; y = j * h;
+			if (x == 0 || x == 1 || y == 0 || y == 1) u[i][j] = g(x, y);
+			else u[i][j] = randfrom(-100, 100);
 		}
 	}
+	
 }
 
 int min(int x, int y) {
 	return (x < y) ? x : y;
 }
 
-double block(int block_x, int block_y, double **u, size_t block_size, size_t grid_size) {
+double block_calculation(int block_x, int block_y, grid_t grid, double **u) {
 
-	int actual_border_x = min(block_size * (block_x + 1), grid_size) + 1;
-	int actual_border_y = min(block_size * (block_y + 1), grid_size) + 1;
-	double temp, delta, d, dm = 0;
+	int left_border_x = 1 + grid.block_size * block_x;
+	int left_border_y = 1 + grid.block_size * block_y;
+	int right_border_x = min(grid.block_size * (block_x + 1), grid.grid_size) + 1;
+	int right_border_y = min(grid.block_size * (block_y + 1), grid.grid_size) + 1;
+	double temp, delta, d, dm = 0, h = grid.h;
 
-	for (int i = 1 + block_size * block_x; i < actual_border_x; i++) {
-		for (int j = 1 + block_size * block_y; j < actual_border_y; j++) {
+	for (int i = left_border_x; i < right_border_x; i++) {
+		for (int j = left_border_y; j < right_border_y; j++) {
 			temp = u[i][j];
-			u[i][j] = 0.25 * (u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1]);
+			u[i][j] = 0.25 * (u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1] - h * h * grid.f(i * h, j * h));
 			d = fabs(temp - u[i][j]);
 			if (dm < d) dm = d;
 		}
@@ -72,9 +91,11 @@ double block(int block_x, int block_y, double **u, size_t block_size, size_t gri
 
 }
 
-void poisson(double eps, double **u, size_t grid_size, size_t block_size) {
+void grid_calculation(grid_t grid, double **u) {
+
 	int i, j;
-	int num_blocks = (grid_size % block_size) > 0 ? grid_size / block_size + 1 : grid_size / block_size;
+	int num_blocks = (grid.grid_size % grid.block_size) > 0 ? 
+		grid.grid_size / grid.block_size + 1 : grid.grid_size / grid.block_size;
 	double dmax, temp, d, dmax_temp, dm[num_blocks];
 
 	do {
@@ -86,7 +107,7 @@ void poisson(double eps, double **u, size_t grid_size, size_t block_size) {
 			#pragma omp parallel for shared(nx, dm) private(i, j, d)
 			for (i = 0; i < nx + 1; i++) {
 				j = nx - i;
-				d = block(i, j, u, grid_size, block_size);
+				d = block_calculation(i, j, grid, u);
 				if (dm[nx] < d) dm[nx] = d;
 			}
 		}
@@ -95,7 +116,7 @@ void poisson(double eps, double **u, size_t grid_size, size_t block_size) {
 			#pragma omp parallel for shared(nx, dm) private(i, j, d)
 			for (i = num_blocks - nx - 1; i < num_blocks; i++) {
 				j = 2 * (num_blocks - 1) - nx - i;
-				d = block(i, j, u, grid_size, block_size);
+				d = block_calculation(i, j, grid, u);
 				if (dm[nx] < d) dm[nx] = d;
 			}
 		}
@@ -112,7 +133,9 @@ void poisson(double eps, double **u, size_t grid_size, size_t block_size) {
 			}
 		}
 
-	} while (dmax > eps);
+		
+
+	} while (dmax > grid.eps);
 
 }
 
@@ -145,13 +168,13 @@ int arg_parse(int argc, char **argv, size_t *grid_size, size_t *block_size, doub
 
 	for (int i = 1; i < argc; i++) {
 
-		if (fscanf(argv[i], "--gsz=%d", grid_size)) {
+		if (sscanf(argv[i], "--gsz=%ld", grid_size)) {
 			if (args_flags[0] == true) return error_msg("Grid size argument was listed twice!\n", LISTED_TWICE_ERROR);
 			else args_flags[0] = true;
-		} else if (fscanf(argv[i], "--bsz=%d", block_size)) {
+		} else if (sscanf(argv[i], "--bsz=%ld", block_size)) {
 			if (args_flags[1] == true) return error_msg("Block size argument was listed twice!\n", LISTED_TWICE_ERROR);
 			else args_flags[1] = true;
-		} else if (fscanf(argv[i], "--eps=%f", eps)) {
+		} else if (sscanf(argv[i], "--eps=%lf", eps)) {
 			if (args_flags[2] == true) return error_msg("Epsilon argument was listed twice!\n", LISTED_TWICE_ERROR);
 			else args_flags[2] = true;
 		} else return error_msg("Incorrect argument!\n", INCORRECT_ARGUMENT);
@@ -162,20 +185,30 @@ int arg_parse(int argc, char **argv, size_t *grid_size, size_t *block_size, doub
 	if (*block_size % 32 != 0 ) return error_msg("Block size must be divisible by 32!\n", INCORRECT_ARGUMENT_VALUE);
 	if (*eps <= 0) return error_msg("Incorrect epsilon value!", INCORRECT_ARGUMENT_VALUE);
 
+	return 0;
+
 }
 
 int main(int argc, char **argv) {
 
-	size_t grid_size = DEFAULT_GSZ, block_size = DEFAULT_BSZ;
+	size_t grid_size = DEFAULT_GSZ;
+	size_t block_size = DEFAULT_BSZ;
 	double eps = DEFAULT_EPS;
+	double h;
+	int rc = arg_parse(argc, argv, &grid_size, &block_size, &eps);
 
-	arg_parse(argc, argv, &grid_size, &block_size, &eps);
+	if (rc) return rc;
+
+	h = 1.0 / (grid_size + 1);
 
 	double **u = matrix_malloc(grid_size);
+	matrix_init(u, grid_size, h, g);
+
+	grid_t grid = {eps, grid_size, block_size, f, h};
 
 	srand(SEED);
-	matrix_init(u, grid_size);
-	poisson(eps, u, grid_size, block_size);
+	
+	grid_calculation(grid, u);
 
 	for (int i = 0; i < grid_size + 2; i++) {
 		for (int j = 0; j < grid_size + 2; j++) {
@@ -185,4 +218,6 @@ int main(int argc, char **argv) {
 	}
 
 	matrix_free(u, grid_size);
+
+	return 0;
 }
