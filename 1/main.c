@@ -63,7 +63,7 @@ void matrix_init(double **u, size_t grid_size, double h, fun_xy g) {
 			else u[i][j] = randfrom(-100, 100);
 		}
 	}
-	
+
 }
 
 int min(int x, int y) {
@@ -189,6 +189,18 @@ int arg_parse(int argc, char **argv, size_t *grid_size, size_t *block_size, doub
 
 }
 
+double run_test(grid_t grid, double **u) {
+
+    double t1, t2, dt;
+    t1 = omp_get_wtime();
+    grid_calculation(grid, u);
+    t2 = omp_get_wtime();
+    dt = t2 - t1;
+
+    return dt;
+	
+}
+
 int main(int argc, char **argv) {
 
 	size_t grid_size = DEFAULT_GSZ;
@@ -208,14 +220,9 @@ int main(int argc, char **argv) {
 
 	srand(SEED);
 	
-	grid_calculation(grid, u);
+	double time = run_test(grid, u);
 
-	for (int i = 0; i < grid_size + 2; i++) {
-		for (int j = 0; j < grid_size + 2; j++) {
-			printf("%.2f ", u[i][j]);
-		}
-		printf("\n");
-	}
+	printf("%lf\n", time);
 
 	matrix_free(u, grid_size);
 
