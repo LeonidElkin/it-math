@@ -6,28 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define DEFAULT_GSZ 100
-#define DEFAULT_EPS 0.000001
-#define SEED 0xebac0c
-#define DEFAULT_BSZ 64
-#define MAX_NUM_OF_ARGS 4
-
-typedef double (*fun_xy)(double, double);
-
-typedef struct grid {
-	double eps;
-	size_t grid_size;
-	size_t block_size;
-	fun_xy f;
-	double h;
-} grid_t;
-
-enum {
-	NUM_OF_ARGUMENT_ERROR = -1,
-	INCORRECT_ARGUMENT = -2,
-	LISTED_TWICE_ERROR = -3,
-	INCORRECT_ARGUMENT_VALUE = -4
-};
+#include "utils.h"
 
 double f(double x, double y) {
 	return 0.0;
@@ -40,21 +19,9 @@ double g(double x, double y) {
 	if (x == 1) return 200 * y - 100;
 }
 
-bool cas(double *number, double old, double new) {
-	if (*number != old)
-		return false;
-	*number = new;
-	return true;
-}
-
-double randfrom(double min, double max) {
-	double range = (max - min);
-	double div = RAND_MAX / range;
-	return min + (rand() / div);
-}
-
 void matrix_init(double **u, size_t grid_size, double h, fun_xy g) {
 	double x, y;
+	srand(SEED);
 
 	for (int i = 0; i < grid_size + 2; i++) {
 		for (int j = 0; j < grid_size + 2; j++) {
@@ -64,10 +31,6 @@ void matrix_init(double **u, size_t grid_size, double h, fun_xy g) {
 		}
 	}
 
-}
-
-int min(int x, int y) {
-	return (x < y) ? x : y;
 }
 
 double block_calculation(int block_x, int block_y, grid_t grid, double **u) {
@@ -91,15 +54,15 @@ double block_calculation(int block_x, int block_y, grid_t grid, double **u) {
 
 }
 
-void grid_calculation(grid_t grid, double **u) {
+int grid_calculation(grid_t grid, double **u) {
 
-	int i, j;
+	int i, j, iter_cnt = 0;
 	int num_blocks = (grid.grid_size % grid.block_size) > 0 ? 
 		grid.grid_size / grid.block_size + 1 : grid.grid_size / grid.block_size;
 	double dmax, temp, d, dmax_temp, dm[num_blocks];
 
 	do {
-
+		iter_cnt++;
 		dmax = 0;
 
 		for (int nx = 0; nx < num_blocks; nx++) {
@@ -137,24 +100,7 @@ void grid_calculation(grid_t grid, double **u) {
 
 	} while (dmax > grid.eps);
 
-}
-
-double **matrix_malloc(size_t grid_size) {
-	double **u = (double **) malloc(sizeof(double *) * (grid_size + 2));
-	for (int i = 0; i < grid_size + 2; i++)
-		u[i] = (double *) malloc(sizeof(double) * (grid_size + 2));
-	return u;
-}
-
-void matrix_free(double **u, size_t grid_size) {
-	for (int i = 0; i < grid_size + 2; i++)
-		free(u[i]);
-	free(u);
-}
-
-int error_msg(char* msg, int err) {
-	fprintf(stderr, "%s", msg);
-	return err;
+	return iter_cnt;
 }
 
 int arg_parse(int argc, char **argv, size_t *grid_size, size_t *block_size, double *eps) {
@@ -189,15 +135,17 @@ int arg_parse(int argc, char **argv, size_t *grid_size, size_t *block_size, doub
 
 }
 
-double run_test(grid_t grid, double **u) {
+test_results_t run_test(grid_t grid, double **u) {
 
     double t1, t2, dt;
+	int iter_cnt;
+
     t1 = omp_get_wtime();
-    grid_calculation(grid, u);
+	iter_cnt = grid_calculation(grid, u);
     t2 = omp_get_wtime();
     dt = t2 - t1;
 
-    return dt;
+    return (test_results_t){iter_cnt, dt};
 	
 }
 
@@ -206,25 +154,20 @@ int main(int argc, char **argv) {
 	size_t grid_size = DEFAULT_GSZ;
 	size_t block_size = DEFAULT_BSZ;
 	double eps = DEFAULT_EPS;
-	double h;
-	int rc = arg_parse(argc, argv, &grid_size, &block_size, &eps);
 
+	int rc = arg_parse(argc, argv, &grid_size, &block_size, &eps);
 	if (rc) return rc;
 
-	h = 1.0 / (grid_size + 1);
-
-	double **u = matrix_malloc(grid_size);
+	double h = 1.0 / (grid_size + 1);
+	double **u = matrix_malloc(grid_size + 2);
 	matrix_init(u, grid_size, h, g);
-
 	grid_t grid = {eps, grid_size, block_size, f, h};
-
-	srand(SEED);
 	
-	double time = run_test(grid, u);
+	test_results_t res = run_test(grid, u);
 
-	printf("%lf\n", time);
+	printf("Count of iterations = %d\nTime = %lf\n", res.iterations, res.time);
 
-	matrix_free(u, grid_size);
+	matrix_free(u, grid_size + 2);
 
 	return 0;
 }
