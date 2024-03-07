@@ -5,7 +5,9 @@
 #define DEFAULT_EPS 0.1
 #define SEED 0xebac0c
 #define DEFAULT_BSZ 32
-#define MAX_NUM_OF_ARGS 4
+#define MAX_NUM_OF_ARGS 6
+#define DEFAULT_RAND_MIN -100
+#define DEFAULT_RAND_MAX 100
 
 typedef double (*fun_xy)(double, double);
 

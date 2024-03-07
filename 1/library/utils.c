@@ -25,14 +25,14 @@ int error_msg(char* msg, int err) {
 }
 
 void matrix_free(double **u, size_t size) {
-	for (int i = 0; i < size; i++)
+	for (size_t i = 0; i < size; i++)
 		free(u[i]);
 	free(u);
 }
 
 double **matrix_malloc(size_t size) {
 	double **u = (double **) malloc(sizeof(double *) * (size));
-	for (int i = 0; i < size; i++)
+	for (size_t i = 0; i < size; i++)
 		u[i] = (double *) malloc(sizeof(double) * (size));
 	return u;
 }
