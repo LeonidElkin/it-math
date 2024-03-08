@@ -143,5 +143,5 @@ int num_threads_parse (int argc, char **argv, int *num_threads) {
 		}
 	}
 
-	if (*num_threads < 0) return error_msg("Number of threads is less than zero!\n", INCORRECT_ARGUMENT_VALUE)
+	if (*num_threads < 0) return error_msg("Number of threads is less than zero!\n", INCORRECT_ARGUMENT_VALUE);
 }
