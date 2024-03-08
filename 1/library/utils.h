@@ -14,7 +14,6 @@ typedef double (*fun_xy)(double, double);
 typedef struct grid {
 	double eps;
 	size_t grid_size;
-	size_t block_size;
 	fun_xy f;
 	double h;
 } grid_t;
@@ -37,3 +36,5 @@ int min(int x, int y);
 int error_msg(char* msg, int err);
 void matrix_free(double **u, size_t grid_size);
 double **matrix_malloc(size_t size);
+void matrix_init(double **u, grid_t grid, double min_border, double max_border);
+int arg_parse(int argc, char **argv, size_t *grid_size, double *eps, double *rand_min_border, double *rand_max_border);
