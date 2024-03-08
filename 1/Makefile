@@ -2,12 +2,15 @@ include config.cfg
 
 BLOCKY = $(BLD_DIR)$(NAME_1)
 SEQUANTIAL = $(BLD_DIR)$(NAME_2)
+PARALLEL = $(BLD_DIR)$(NAME_3)
 
 BLOCKY_OBJ = $(BLD_DIR)$(NAME_1).o
 SEQUANTIAL_OBJ = $(BLD_DIR)$(NAME_2).o
+PARALLEL_OBJ = $(BLD_DIR)$(NAME_3).o
 
 BLOCKY_SRC = $(SRC_DIR)/$(NAME_1).c
 SEQUANTIAL_SRC = $(SRC_DIR)/$(NAME_2).c
+PARALLEL_SRC = $(SRC_DIR)/$(NAME_3).c
  
 LBR_SRC = $(wildcard $(LBR_DIR)*.c)
 LBR_OBJ = $(patsubst $(LBR_DIR)%.c, $(BLD_DIR)%.o, $(LBR_SRC))
@@ -22,10 +25,19 @@ all: build $(BLOCKY)
 sequantial: build $(SEQUANTIAL)
 	@echo "A sequantial algorithm is built"
 
+## make parallel: Build a parallel algorithm without the block method
+parallel: build $(PARALLEL)
+	@echo "A parallel algorithm is built"
+
+$(PARALLEL): $(PARALLEL_OBJ) $(LBR_OBJ)
+	@$(CC) $(FLAGS) $^ -o $@
+
+$(PARALLEL_OBJ): $(PARALLEL_SRC)
+	@$(CC) $(FLAGS) -c $^ -o $@
+
 $(SEQUANTIAL): $(SEQUANTIAL_OBJ) $(LBR_OBJ)
 	@$(CC) $(FLAGS) $^ -o $@
 
-## make parallel: Build a parallel algorithm without the block method
 $(SEQUANTIAL_OBJ): $(SEQUANTIAL_SRC)
 	@$(CC) $(FLAGS) -c $^ -o $@
 

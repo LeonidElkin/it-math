@@ -11,23 +11,31 @@ extern fun_xy g_functions[];
 
 int grid_calculation(grid_t *grid, double **u) {
 
-    double dmax, temp, dm, h = grid->h;
-	int iter = 0;
+    double dmax, temp, dm, h = grid->h, d, dmax_temp;
+    int i, j, iter = 0;
 
     do {
         dmax = 0;
-		iter++;
-        for (int i = 1; i < grid->grid_size + 1; i++) {
-			for (int j = 1; j < grid->grid_size + 1; j++) {
+        iter++;
+        #pragma omp parallel for shared(u, dmax) private(i, j, temp, d, dm, dmax_temp)
+        for (i = 1; i < grid->grid_size + 1; i++) {
+            dm = 0;
+			for (j = 1; j < grid->grid_size + 1; j++) {
 				temp = u[i][j];
 				u[i][j] = 0.25 * (u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1] - h * h * grid->f(i * h, j * h));
-				dm = fabs(temp - u[i][j]);
-				if (dmax < dm) dmax = dm;
+				d = fabs(temp - u[i][j]);
+				if (dm < d) dm = d;
+			}
+            while (true) {
+				dmax_temp = dmax;
+				if (dmax_temp < dm) {
+					if (cas(&dmax, dmax_temp, dm))
+						break;
+				} else
+					break;
 			}
 		}
     } while (dmax > grid->eps);
-
-	return iter;
 }
 
 test_results_t run_test(grid_t *grid, double **u) {
@@ -50,7 +58,7 @@ int main(int argc, char **argv) {
 	double eps = DEFAULT_EPS;
 	double rand_min_border = DEFAULT_RAND_MIN;
 	double rand_max_border = DEFAULT_RAND_MAX;
-	fun_xy f = f_functions[0];
+    fun_xy f = f_functions[0];
 	fun_xy g = g_functions[0];
 
 	int rc = arg_parse(argc, argv, &grid_size, &eps, &rand_min_border, &rand_max_border, &f, &g);
@@ -66,7 +74,8 @@ int main(int argc, char **argv) {
 	test_results_t res = run_test(grid_p, u);
 
 	printf("Count of iterations = %d\tTime = %lf\n", res.iterations, res.time);
-	if (rc = pprint(u, grid_p, "sequential_results.txt")) return rc;
+
+	if (rc = pprint(u, grid_p, "parallel_results.txt")) return rc;
 
 	matrix_free(u, grid_size + 2);
 

@@ -7,18 +7,21 @@
 #include "../library/utils.h"
 #include "../library/functions.h"
 
-double block_calculation(int block_x, int block_y, grid_t grid, size_t block_size, double **u) {
+extern fun_xy f_functions[];
+extern fun_xy g_functions[];
+
+double block_calculation(int block_x, int block_y, grid_t *grid, size_t block_size, double **u) {
 
 	int left_border_x = 1 + block_size * block_x;
 	int left_border_y = 1 + block_size * block_y;
-	int right_border_x = min(block_size * (block_x + 1), grid.grid_size) + 1;
-	int right_border_y = min(block_size * (block_y + 1), grid.grid_size) + 1;
-	double temp, d, dm = 0, h = grid.h;
+	int right_border_x = min(block_size * (block_x + 1), grid->grid_size) + 1;
+	int right_border_y = min(block_size * (block_y + 1), grid->grid_size) + 1;
+	double temp, d, dm = 0, h = grid->h;
 
 	for (int i = left_border_x; i < right_border_x; i++) {
 		for (int j = left_border_y; j < right_border_y; j++) {
 			temp = u[i][j];
-			u[i][j] = 0.25 * (u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1] - h * h * grid.f(i * h, j * h));
+			u[i][j] = 0.25 * (u[i - 1][j] + u[i + 1][j] + u[i][j - 1] + u[i][j + 1] - h * h * grid->f(i * h, j * h));
 			d = fabs(temp - u[i][j]);
 			if (dm < d) dm = d;
 		}
@@ -28,11 +31,11 @@ double block_calculation(int block_x, int block_y, grid_t grid, size_t block_siz
 
 }
 
-int grid_calculation(grid_t grid, size_t block_size, double **u) {
+int grid_calculation(grid_t *grid, size_t block_size, double **u) {
 
 	int i, j, iter_cnt = 0;
-	int num_blocks = (grid.grid_size % block_size) > 0 ? 
-		grid.grid_size / block_size + 1 : grid.grid_size / block_size;
+	int num_blocks = (grid->grid_size % block_size) > 0 ? 
+		grid->grid_size / block_size + 1 : grid->grid_size / block_size;
 	double dmax, d, dmax_temp, dm[num_blocks];
 
 	do {
@@ -73,12 +76,12 @@ int grid_calculation(grid_t grid, size_t block_size, double **u) {
 
 		
 
-	} while (dmax > grid.eps);
+	} while (dmax > grid->eps);
 
 	return iter_cnt;
 }
 
-int block_size_parse (char **argv, int argc, size_t *block_size) {
+int block_size_parse (int argc, char **argv, size_t *block_size) {
 
 	bool is_defined = false;
 
@@ -93,7 +96,7 @@ int block_size_parse (char **argv, int argc, size_t *block_size) {
 	if (*block_size % 32 != 0 ) return error_msg("Block size must be divisible by 32!\n", INCORRECT_ARGUMENT_VALUE);
 }
 
-test_results_t run_test(grid_t grid, size_t block_size, double **u) {
+test_results_t run_test(grid_t *grid, size_t block_size, double **u) {
 
     double t1, t2, dt;
 	int iter_cnt;
@@ -114,18 +117,24 @@ int main(int argc, char **argv) {
 	double eps = DEFAULT_EPS;
 	double rand_min_border = DEFAULT_RAND_MIN;
 	double rand_max_border = DEFAULT_RAND_MAX;
+	fun_xy f = f_functions[0];
+	fun_xy g = g_functions[0];
 
-	int rc = arg_parse(argc, argv, &grid_size, &eps, &rand_min_border, &rand_max_border);
+	int rc = arg_parse(argc, argv, &grid_size, &eps, &rand_min_border, &rand_max_border, &f, &g);
+	rc = block_size_parse(argc, argv, &block_size);
 	if (rc) return rc;
 
 	double h = 1.0 / (grid_size + 1);
 	double **u = matrix_malloc(grid_size + 2);
 	grid_t grid = {eps, grid_size, f, h};
-	matrix_init(u, grid, rand_min_border, rand_max_border);
+	grid_t *grid_p = &grid;
+	matrix_init(u, grid_p, rand_min_border, rand_max_border);
 	
-	test_results_t res = run_test(grid, block_size, u);
+	test_results_t res = run_test(grid_p, block_size, u);
 
-	printf("Count of iterations = %d\nTime = %lf\n", res.iterations, res.time);
+	printf("Count of iterations = %d\tTime = %lf\n", res.iterations, res.time);
+	pprint(u, grid_p, "blocky_results.txt");
+	printf("block_size = %ld", block_size);
 
 	matrix_free(u, grid_size + 2);
 
