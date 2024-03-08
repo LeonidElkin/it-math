@@ -131,3 +131,17 @@ int arg_parse(int argc, char **argv, size_t *grid_size, double *eps, double *ran
 	return 0;
 
 }
+
+int num_threads_parse (int argc, char **argv, int *num_threads) {
+
+	bool is_defined = false;
+
+	for (int i = 1; i < argc; i++) {
+		if (sscanf(argv[i], "--threads=%d", num_threads)) {
+			if (is_defined == true) return error_msg("Number of threads argument was listed twice!\n", LISTED_TWICE_ERROR);
+			else is_defined = true;
+		}
+	}
+
+	if (*num_threads < 0) return error_msg("Number of threads is less than zero!\n", INCORRECT_ARGUMENT_VALUE)
+}

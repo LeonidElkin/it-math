@@ -38,7 +38,9 @@ int grid_calculation(grid_t *grid, double **u) {
     } while (dmax > grid->eps);
 }
 
-test_results_t run_test(grid_t *grid, double **u) {
+test_results_t run_test(grid_t *grid, double **u, int num_threads) {
+
+    omp_set_num_threads(num_threads);
 
     double t1, t2, dt;
 	int iter_cnt;
@@ -60,9 +62,10 @@ int main(int argc, char **argv) {
 	double rand_max_border = DEFAULT_RAND_MAX;
     fun_xy f = f_functions[0];
 	fun_xy g = g_functions[0];
+    int rc, num_threads = DEFAULT_THREADS;
 
-	int rc = arg_parse(argc, argv, &grid_size, &eps, &rand_min_border, &rand_max_border, &f, &g);
-	if (rc) return rc;
+	if (rc = arg_parse(argc, argv, &grid_size, &eps, &rand_min_border, &rand_max_border, &f, &g)) return rc;
+	if (rc = num_threads_parse(argc, argv, &num_threads)) return rc;
 
 	double h = 1.0 / (grid_size + 1);
 	double **u = matrix_malloc(grid_size + 2);
@@ -71,7 +74,7 @@ int main(int argc, char **argv) {
 	grid_t *grid_p = &grid;
 	matrix_init(u, grid_p, rand_min_border, rand_max_border);
 	
-	test_results_t res = run_test(grid_p, u);
+	test_results_t res = run_test(grid_p, u, num_threads);
 
 	printf("Count of iterations = %d\tTime = %lf\n", res.iterations, res.time);
 

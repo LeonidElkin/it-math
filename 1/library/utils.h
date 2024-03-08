@@ -2,6 +2,7 @@
 #include <stdbool.h>
 
 #define DEFAULT_GSZ 100
+#define DEFAULT_THREADS 8
 #define DEFAULT_EPS 0.1
 #define SEED 0xebac0c
 #define DEFAULT_BSZ 32
@@ -10,6 +11,7 @@
 #define DEFAULT_RAND_MAX 100
 #define MAX_NUM_OF_F_FUNCS 1
 #define MAX_NUM_OF_G_FUNCS 1
+
 
 typedef double (*fun_xy)(double, double);
 
@@ -44,3 +46,4 @@ double **matrix_malloc(size_t size);
 void matrix_init(double **u, grid_t *grid, double min_border, double max_border);
 int arg_parse(int argc, char **argv, size_t *grid_size, double *eps, double *rand_min_border, double *rand_max_border, fun_xy *f, fun_xy *g);
 int pprint(double **u, grid_t *grid, const char *file_name);
+int num_threads_parse (int argc, char **argv, int *num_threads);
