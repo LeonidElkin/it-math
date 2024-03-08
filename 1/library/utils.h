@@ -11,6 +11,7 @@
 #define DEFAULT_RAND_MAX 100
 #define MAX_NUM_OF_F_FUNCS 1
 #define MAX_NUM_OF_G_FUNCS 1
+#define MAX_FILE_NAME_SIZE 255
 
 
 typedef double (*fun_xy)(double, double);
@@ -23,8 +24,8 @@ typedef struct grid {
 } grid_t;
 
 typedef struct test_results {
-    int iterations;
-    double time;
+	int iterations;
+	double time;
 } test_results_t;
 
 enum {
@@ -34,16 +35,19 @@ enum {
 	INCORRECT_ARGUMENT_VALUE = -4,
 	FILE_OPEN_ERROR = -5,
 	FILE_WRITE_ERROR = -6,
-	FUNCTION_ERROR = -7
+	FUNCTION_ERROR = -7,
+	FILE_NAME_ERROR = -8
 };
 
 bool cas(double *number, double old, double new_one);
 double randfrom(double min, double max);
 int min(int x, int y);
-int error_msg(char* msg, int err);
+int error_msg(char *msg, int err);
 void matrix_free(double **u, size_t grid_size);
 double **matrix_malloc(size_t size);
-void matrix_init(double **u, grid_t *grid, double min_border, double max_border);
-int arg_parse(int argc, char **argv, size_t *grid_size, double *eps, double *rand_min_border, double *rand_max_border, fun_xy *f, fun_xy *g);
-int pprint(double **u, grid_t *grid, const char *file_name);
-int num_threads_parse (int argc, char **argv, int *num_threads);
+void matrix_init(double **u, grid_t *grid, double min_border, double max_border, fun_xy g);
+int arg_parse(int argc, char **argv, size_t *grid_size, double *eps, double *rand_min_border, double *rand_max_border,
+			  int *index_f, int *index_g);
+
+int pprint(double **u, grid_t *grid, char *file_name, int index_f, int index_g);
+int num_threads_parse(int argc, char **argv, int *num_threads);

@@ -50,23 +50,25 @@ int main(int argc, char **argv) {
 	double eps = DEFAULT_EPS;
 	double rand_min_border = DEFAULT_RAND_MIN;
 	double rand_max_border = DEFAULT_RAND_MAX;
-	fun_xy f = f_functions[0];
-	fun_xy g = g_functions[0];
+	int index_f = 0, index_g = 0;
 
-	int rc = arg_parse(argc, argv, &grid_size, &eps, &rand_min_border, &rand_max_border, &f, &g);
+	int rc = arg_parse(argc, argv, &grid_size, &eps, &rand_min_border, &rand_max_border, &index_f, &index_g);
 	if (rc) return rc;
+
+	fun_xy f = f_functions[index_f];
+	fun_xy g = g_functions[index_g];
 
 	double h = 1.0 / (grid_size + 1);
 	double **u = matrix_malloc(grid_size + 2);
 
 	grid_t grid = {eps, grid_size, f, h};
 	grid_t *grid_p = &grid;
-	matrix_init(u, grid_p, rand_min_border, rand_max_border);
+	matrix_init(u, grid_p, rand_min_border, rand_max_border, g);
 	
 	test_results_t res = run_test(grid_p, u);
 
 	printf("Count of iterations = %d\tTime = %lf\n", res.iterations, res.time);
-	if (rc = pprint(u, grid_p, "sequential_results.txt")) return rc;
+	if ((rc = pprint(u, grid_p, "sequential.txt", index_f, index_g))) return rc;
 
 	matrix_free(u, grid_size + 2);
 

@@ -9,6 +9,7 @@ double g(double x, double y) {
 	if (x == 0) return 100 - 200 * y;
 	if (y == 1) return 200 * x - 100;
 	if (x == 1) return 200 * y - 100;
+	return 0.0;
 }
 
 fun_xy f_functions[MAX_NUM_OF_F_FUNCS] = {f};
