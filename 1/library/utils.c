@@ -1,6 +1,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "utils.h"
 #include "functions.h"
@@ -23,7 +26,13 @@ int pprint(double **u, grid_t *grid, char *algo_name, int index_f, int index_g) 
 
 	int rc = 0;
 	char file_name[MAX_FILE_NAME_SIZE];
-	if (snprintf(file_name, MAX_FILE_NAME_SIZE, "gsz=%ld_eps=%lf_f=%s_g=%s_algo_%s", grid->grid_size, grid->eps,
+	struct stat st = {0};
+
+	if (stat("../results", &st) == -1) {
+		mkdir("../results", 0700);
+	}
+
+	if (snprintf(file_name, MAX_FILE_NAME_SIZE, "../results/gsz=%ld_eps=%lf_f=%s_g=%s_algo_%s", grid->grid_size, grid->eps,
 				 f_names[index_f], g_names[index_g], algo_name) <= 0) {
 		return error_msg("Couldn't generate file name!\n", INCORRECT_ARGUMENT_VALUE);
 	}

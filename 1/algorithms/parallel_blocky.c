@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 
 	printf("Count of iterations = %d\tTime = %lf\n", res.iterations, res.time);
 	if ((rc = pprint(u, grid_p, "blocky.txt", index_f, index_g))) return rc;
-	printf("block_size = %ld", block_size);
+	printf("block_size = %ld\n", block_size);
 
 	matrix_free(u, grid_size + 2);
 
