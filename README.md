@@ -1,2 +1,2 @@
 # it-math
-Repository for homework in computational mathematics
+- [x] [Task 1](1/) - Сделано! УРА! УРА! УРА!
