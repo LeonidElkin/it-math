@@ -9,6 +9,8 @@
 #include "utils.h"
 #include "functions.h"
 
+#define HELP_RETURN_CODE 52
+
 extern fun_xy f_functions[];
 extern fun_xy g_functions[];
 const char *f_names[] = {"default"};
@@ -33,7 +35,8 @@ int pprint(double **u, grid_t *grid, char *algo_name, int index_f, int index_g) 
 		mkdir("../results", 0700);
 	}
 
-	if (snprintf(file_name, MAX_FILE_NAME_SIZE, "../results/gsz=%ld_eps=%lf_f=%s_g=%s_algo_%s", grid->grid_size, grid->eps,
+	if (snprintf(file_name, MAX_FILE_NAME_SIZE, "../results/gsz=%ld_eps=%lf_f=%s_g=%s_algo_%s", grid->grid_size,
+				 grid->eps,
 				 f_names[index_f], g_names[index_g], algo_name) <= 0) {
 		return error_msg("Couldn't generate file name!\n", INCORRECT_ARGUMENT_VALUE);
 	}
@@ -110,6 +113,20 @@ int arg_parse(int argc, char **argv, size_t *grid_size, double *eps, double *ran
 		return NUM_OF_ARGUMENT_ERROR;
 	}
 
+	if (argc == 2) {
+		if (!strcmp(argv[1], "--help")) {
+			printf("--gsz=\t\t Grid size\n"
+				   "--eps=\t\t The accuracy of the calculation shows which maximum spread in the grid points is acceptable\n"
+				   "--min=\t\t The minimum border of randomly generated entry values\n"
+				   "--max=\t\t The maximum border of randomly generated entry values\n"
+				   "--f=\t\t Name of used f function. Now only \"default\" is supported. Can be easily added more if it is needed\n"
+				   "--g=\t\t Name of used g function. Now only \"default\" is supported. Can be easily added more if it is needed\n"
+				   "--threads=\t Number of threads. Only in parallel versions\n"
+				   "--bsz=\t\t The size of block in the parallel blocky version\n");
+			return HELP_RETURN_CODE;
+		}
+	}
+
 	bool args_flags[MAX_NUM_OF_ARGS - 1];
 
 	for (int i = 1; i < argc; i++) {
@@ -138,8 +155,10 @@ int arg_parse(int argc, char **argv, size_t *grid_size, double *eps, double *ran
 
 	}
 
-	if (*index_f < 0 || *index_f >= MAX_NUM_OF_F_FUNCS) return error_msg("Incorrect f function index!\n", FUNCTION_ERROR);
-	if (*index_g < 0 || *index_g >= MAX_NUM_OF_G_FUNCS) return error_msg("Incorrect g function index!\n", FUNCTION_ERROR);
+	if (*index_f < 0 || *index_f >= MAX_NUM_OF_F_FUNCS)
+		return error_msg("Incorrect f function index!\n", FUNCTION_ERROR);
+	if (*index_g < 0 || *index_g >= MAX_NUM_OF_G_FUNCS)
+		return error_msg("Incorrect g function index!\n", FUNCTION_ERROR);
 	if (*grid_size <= 0) return error_msg("Incorrect grid size value!\n", INCORRECT_ARGUMENT_VALUE);
 	if (*eps <= 0) return error_msg("Incorrect epsilon value!\n", INCORRECT_ARGUMENT_VALUE);
 	if (*rand_min_border >= *rand_max_border)
