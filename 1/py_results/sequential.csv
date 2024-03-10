@@ -1,0 +1,9 @@
+Iterations,Time,Eps,Grid_size,f,g
+209,0.015543,0.100000,100,default,default
+722,0.054777,0.010000,100,default,default
+291,0.089306,0.100000,200,default,default
+1500,0.464347,0.010000,200,default,default
+316,0.609499,0.100000,500,default,default
+2484,4.713047,0.010000,500,default,default
+352,2.634388,0.100000,1000,default,default
+3001,22.187664,0.010000,1000,default,default
