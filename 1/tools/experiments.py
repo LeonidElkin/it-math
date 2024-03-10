@@ -69,6 +69,8 @@ file.close()
 
 print("Blocky is done!")
 
+iteration = 0
+
 file = open(results_path + "/parallel.csv", 'w', encoding='UTF8', newline='')
 writer = csv.writer(file)
 writer.writerow(parallel_header)
@@ -95,6 +97,8 @@ for gsz in [100, 200, 500, 1000]:
 file.close()
 
 print("Parallel is done!")
+
+iteration = 0
 
 file = open(results_path + "/sequential.csv", 'w', encoding='UTF8', newline='')
 writer = csv.writer(file)
