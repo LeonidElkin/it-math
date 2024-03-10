@@ -140,9 +140,8 @@ int main(int argc, char **argv) {
 	
 	test_results_t res = run_test(grid_p, block_size, u, num_threads);
 
-	printf("Count of iterations = %d\tTime = %lf\n", res.iterations, res.time);
+	printf("%d %lf %ld %d ", res.iterations, res.time, block_size, num_threads);
 	if ((rc = pprint(u, grid_p, "blocky.txt", index_f, index_g))) return rc;
-	printf("block_size = %ld\n", block_size);
 
 	matrix_free(u, grid_size + 2);
 

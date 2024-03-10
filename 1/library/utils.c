@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "utils.h"
 #include "functions.h"
@@ -22,7 +23,7 @@ bool cas(double *number, double old, double new_one) {
 
 int pprint(double **u, grid_t *grid, char *algo_name, int index_f, int index_g) {
 
-	printf("Was used the following params:\neps = %lf\ngrid_size = %ld\n", grid->eps, grid->grid_size);
+	printf("%lf %ld %s %s\n", grid->eps, grid->grid_size, f_names[index_f], g_names[index_g]);
 
 	int rc = 0;
 	char file_name[MAX_FILE_NAME_SIZE];
@@ -131,6 +132,8 @@ int arg_parse(int argc, char **argv, size_t *grid_size, double *eps, double *ran
 		} else if (sscanf(argv[i], "--g=%d", index_g)) {
 			if (args_flags[6] == true) return error_msg("Max border argument was listed twice!\n", LISTED_TWICE_ERROR);
 			else args_flags[6] = true;
+		} else if (!(strncmp(argv[i], "--threads=", 10)) || !(strncmp(argv[i], "--bsz=", 6))) {
+			continue;
 		} else return error_msg("Incorrect argument!\n", INCORRECT_ARGUMENT);
 
 	}

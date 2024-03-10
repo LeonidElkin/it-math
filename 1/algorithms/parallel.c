@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 	
 	test_results_t res = run_test(grid_p, u, num_threads);
 
-	printf("Count of iterations = %d\tTime = %lf\n", res.iterations, res.time);
+	printf("%d %lf %d ", res.iterations, res.time, num_threads);
 
 	if ((rc = pprint(u, grid_p, "parallel.txt", index_f, index_g))) return rc;
 

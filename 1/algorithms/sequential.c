@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 	
 	test_results_t res = run_test(grid_p, u);
 
-	printf("Count of iterations = %d\tTime = %lf\n", res.iterations, res.time);
+	printf("%d %lf ", res.iterations, res.time);
 	if ((rc = pprint(u, grid_p, "sequential.txt", index_f, index_g))) return rc;
 
 	matrix_free(u, grid_size + 2);
