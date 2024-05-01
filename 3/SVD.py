@@ -10,10 +10,13 @@ class AbstractSVD(ABC):
         self.s = None
         self.accuracy = accuracy
 
-    def truncate(self, u, s, v: int):
-        u_trunc = u[:, :self.accuracy]
-        s_trunc = s[:self.accuracy]
-        v_trunc = v[:self.accuracy, :]
+    def truncate(self, is_compressed):
+        accuracy = min(len(self.u), len(self.s), len(self.v))
+        if is_compressed:
+            accuracy = min(self.accuracy, accuracy)
+        u_trunc = self.u[:, :accuracy]
+        s_trunc = self.s[:accuracy]
+        v_trunc = self.v[:accuracy, :]
         return u_trunc, s_trunc, v_trunc
 
     @abstractmethod
@@ -21,14 +24,14 @@ class AbstractSVD(ABC):
         pass
 
     def encode(self, matrix):
-        u, s, v = self.algorithm(matrix)
-        self.u, self.s, self.v = self.truncate(u, s, v)
+        self.u, self.s, self.v = self.algorithm(matrix)
         return self
 
-    def decode(self):
+    def decode(self, is_compressed):
         if self.u is None or self.v is None or self.s is None:
             ValueError('U or V or S are not initialized')
-        return np.clip(self.u @ np.diag(self.s) @ self.v, 0, 255).astype(np.uint8)
+        u, s, v = self.truncate(is_compressed)
+        return np.clip(u @ np.diag(s) @ v, 0, 255).astype(np.uint8)
 
 
 class NpSVD(AbstractSVD):
