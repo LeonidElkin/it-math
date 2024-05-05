@@ -44,7 +44,6 @@ class BRUH:
     def __load_from_bruh(self, file: BinaryIO, encoder: AbstractSVD):
         self.__meta_pack.value = self.__Meta(
             *unpack(self.__meta_pack.format, file.read(calcsize(self.__meta_pack.format))))
-        print(self.__meta_pack.value.algorithm)
         if self.__meta_pack.value.algorithm not in self.__supported_algorithms:
             ValueError(f"Invalid algorithm given. Must be one of {NpSVD.name} , Block, Power")
         self.__r_channel, self.__g_channel, self.__b_channel = [self.__load_channel_from_bruh(file, encoder) for _ in
