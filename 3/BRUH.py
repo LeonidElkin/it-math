@@ -1,7 +1,6 @@
 from copy import deepcopy
 from typing import NamedTuple, BinaryIO
 
-import numpy as np
 from PIL import Image
 from struct import pack, unpack, calcsize
 from Packing import *
@@ -21,6 +20,7 @@ class BRUH:
     __supported_algorithms = (NpSVD.name, b"Block", b"Power")
     __magic_value_pack = Packing(b'BRUH', "<4s")
     __meta_pack = Packing(None, f"<2I{__max_algo_name_length}s")
+    __matrix_pack_format = "<5I"
 
     def __init__(self, file_path: str, encoder: AbstractSVD):
         self.__g_channel = None
@@ -33,12 +33,11 @@ class BRUH:
             else:
                 self.__load_from_image(file_path, encoder)
 
-    @staticmethod
-    def __load_channel_from_bruh(file: BinaryIO, encoder: AbstractSVD):
-        sizes = unpack("<5I", file.read(calcsize("<5I")))
-        u, s, v = [np.fromfile(file, dtype=np.float64, count=sizes[0] * sizes[1]).reshape(sizes[0], sizes[1]),
-                   np.fromfile(file, dtype=np.float64, count=sizes[2]),
-                   np.fromfile(file, dtype=np.float64, count=sizes[3] * sizes[4]).reshape(sizes[3], sizes[4])]
+    def __load_channel_from_bruh(self, file: BinaryIO, encoder: AbstractSVD):
+        sizes = unpack(self.__matrix_pack_format, file.read(calcsize(self.__matrix_pack_format)))
+        u, s, v = [np.fromfile(file, dtype=np.float32, count=sizes[0] * sizes[1]).reshape(sizes[0], sizes[1]),
+                   np.fromfile(file, dtype=np.float32, count=sizes[2]),
+                   np.fromfile(file, dtype=np.float32, count=sizes[3] * sizes[4]).reshape(sizes[3], sizes[4])]
         return deepcopy(encoder)._AbstractSVD__setter(u, s, v, sizes)
 
     def __load_from_bruh(self, file: BinaryIO, encoder: AbstractSVD):
@@ -59,17 +58,17 @@ class BRUH:
             map(lambda x, y: y.encode(x), [image_matrix[:, :, i] for i in range(3)],
                 [deepcopy(encoder) for _ in range(3)]))
 
-    def get_image(self, is_compressed=True):
+    def get_image(self):
         img = np.zeros((self.__meta_pack.value.img_height, self.__meta_pack.value.img_width, 3), dtype=np.uint8)
-        img[:, :, 0] = self.__r_channel.decode(is_compressed)
-        img[:, :, 1] = self.__g_channel.decode(is_compressed)
-        img[:, :, 2] = self.__b_channel.decode(is_compressed)
+        img[:, :, 0], img[:, :, 1], img[:, :, 2] = list(
+            map(lambda x: x.decode(), [self.__r_channel, self.__g_channel, self.__b_channel]))
         return Image.fromarray(img)
 
     def __pack_matrices(self):
         packing = b""
         for i in [self.__r_channel, self.__g_channel, self.__b_channel]:
-            packing += pack("<5I", *i.matrices_sizes) + i.u.tobytes() + i.s.tobytes() + i.v.tobytes()
+            packing += pack(self.__matrix_pack_format,
+                            *i.matrices_sizes) + i.u.tobytes() + i.s.tobytes() + i.v.tobytes()
         return packing
 
     def save_bruh(self, output_path: str):
