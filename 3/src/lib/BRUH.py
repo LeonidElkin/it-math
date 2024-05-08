@@ -1,11 +1,10 @@
 from copy import deepcopy
 from typing import NamedTuple, BinaryIO
-
 from PIL import Image
 from struct import pack, unpack, calcsize
-from Packing import *
 
-from SVD import *
+from .Packing import *
+from .SVD import *
 
 
 class BRUH:
@@ -14,22 +13,28 @@ class BRUH:
     class __Meta(NamedTuple):
         img_width: int
         img_height: int
+        compression_degree: int
         algorithm: bytes
 
     __max_algo_name_length = 5
-    __supported_algorithms = (NpSVD.name, b"Block", b"Power")
+    __supported_algorithms_in_bytes = (NpSVD.name, BlockSVD.name, PowerSVD.name)
     __magic_value_pack = Packing(b'BRUH', "<4s")
-    __meta_pack = Packing(None, f"<2I{__max_algo_name_length}s")
+    __meta_pack = Packing(None, f"<3I{__max_algo_name_length}s")
     __matrix_pack_format = "<5I"
+    supported_algorithms = {
+        NpSVD.name.decode("ascii"): NpSVD,
+        BlockSVD.name.decode("ascii"): BlockSVD,
+        PowerSVD.name.decode("ascii"): PowerSVD,
+    }
 
-    def __init__(self, file_path: str, encoder: AbstractSVD):
+    def __init__(self, file_path: str, encoder: AbstractSVD = None):
         self.__g_channel = None
         self.__r_channel = None
         self.__b_channel = None
         with (open(file_path, "rb") as f):
             if unpack(self.__magic_value_pack.format, f.read(calcsize(self.__magic_value_pack.format)))[0] \
                     == self.__magic_value_pack.value:
-                self.__load_from_bruh(f, encoder)
+                self.__load_from_bruh(f)
             else:
                 self.__load_from_image(file_path, encoder)
 
@@ -40,11 +45,13 @@ class BRUH:
                    np.fromfile(file, dtype=np.float32, count=sizes[3] * sizes[4]).reshape(sizes[3], sizes[4])]
         return deepcopy(encoder)._AbstractSVD__setter(u, s, v, sizes)
 
-    def __load_from_bruh(self, file: BinaryIO, encoder: AbstractSVD):
+    def __load_from_bruh(self, file: BinaryIO):
         self.__meta_pack.value = self.__Meta(
             *unpack(self.__meta_pack.format, file.read(calcsize(self.__meta_pack.format))))
-        if self.__meta_pack.value.algorithm not in self.__supported_algorithms:
-            ValueError(f"Invalid algorithm given. Must be one of {NpSVD.name} , Block, Power")
+        if self.__meta_pack.value.algorithm not in self.__supported_algorithms_in_bytes:
+            ValueError("Invalid algorithm given. Must be one of Np, Block, Pow")
+        encoder = self.supported_algorithms[self.__meta_pack.value.algorithm.decode("ascii").strip('\x00')](
+            self.__meta_pack.value.compression_degree)
         self.__r_channel, self.__g_channel, self.__b_channel = [self.__load_channel_from_bruh(file, encoder) for _ in
                                                                 range(3)]
 
@@ -52,7 +59,7 @@ class BRUH:
         image = Image.open(image_path)
         if image.format != "BMP":
             ValueError("Image format is not BMP")
-        self.__meta_pack.value = self.__Meta(image.width, image.height, encoder.name)
+        self.__meta_pack.value = self.__Meta(image.width, image.height, encoder.compression_degree, encoder.name)
         image_matrix = np.array(image)
         self.__r_channel, self.__g_channel, self.__b_channel = list(
             map(lambda x, y: y.encode(x), [image_matrix[:, :, i] for i in range(3)],

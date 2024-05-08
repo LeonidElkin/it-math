@@ -55,8 +55,8 @@ class NpSVD(AbstractSVD):
         return u, s, v
 
 
-class PowSVD(AbstractSVD, ABC):
-    def __init__(self, compression_degree: int = 2, epsilon=1e-2, random_unit_vector_seed=0xebac0c):
+class AbstractPowSVD(AbstractSVD, ABC):
+    def __init__(self, compression_degree: int = 2, epsilon: float=1e-1, random_unit_vector_seed=0xebac0c):
         super().__init__(compression_degree)
         self.epsilon = epsilon
         self.rng = np.random.default_rng(seed=random_unit_vector_seed)
@@ -66,7 +66,7 @@ class PowSVD(AbstractSVD, ABC):
         return unnormalized / np.linalg.norm(unnormalized)
 
 
-class PowerSVD(PowSVD):
+class PowerSVD(AbstractPowSVD):
     name = b"Pow"
 
     def __svd_1d(self, matrix):
@@ -107,7 +107,7 @@ class PowerSVD(PowSVD):
         return us.T, singular_vs, vs
 
 
-class BlockSVD(PowSVD):
+class BlockSVD(AbstractPowSVD):
     name = b"Block"
 
     def _algorithm(self, matrix):
