@@ -20,7 +20,7 @@ class BRUH:
     __supported_algorithms_in_bytes = (NpSVD.name, BlockSVD.name, PowerSVD.name)
     __magic_value_pack = Packing(b'BRUH', "<4s")
     __meta_pack = Packing(None, f"<3I{__max_algo_name_length}s")
-    __matrix_pack_format = "<5I"
+    __matrix_pack_format = "<3I"
     supported_algorithms = {
         NpSVD.name.decode("ascii"): NpSVD,
         BlockSVD.name.decode("ascii"): BlockSVD,
@@ -41,8 +41,8 @@ class BRUH:
     def __load_channel_from_bruh(self, file: BinaryIO, encoder: AbstractSVD):
         sizes = unpack(self.__matrix_pack_format, file.read(calcsize(self.__matrix_pack_format)))
         u, s, v = [np.fromfile(file, dtype=np.float32, count=sizes[0] * sizes[1]).reshape(sizes[0], sizes[1]),
-                   np.fromfile(file, dtype=np.float32, count=sizes[2]),
-                   np.fromfile(file, dtype=np.float32, count=sizes[3] * sizes[4]).reshape(sizes[3], sizes[4])]
+                   np.fromfile(file, dtype=np.float32, count=sizes[1]),
+                   np.fromfile(file, dtype=np.float32, count=sizes[1] * sizes[2]).reshape(sizes[1], sizes[2])]
         return deepcopy(encoder)._AbstractSVD__setter(u, s, v, sizes)
 
     def __load_from_bruh(self, file: BinaryIO):

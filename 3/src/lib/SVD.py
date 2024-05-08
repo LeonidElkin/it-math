@@ -38,7 +38,7 @@ class AbstractSVD(ABC):
         h, w = matrix.shape
         self._accuracy = math.ceil(h * w // (self.__num_of_bytes * self.compression_degree * (h + w + 1)))
         self.u, self.s, self.v = list(map(lambda x: x.astype(np.float32), self.__truncate(*self._algorithm(matrix))))
-        self.matrices_sizes = (*self.u.shape, *self.s.shape, *self.v.shape)
+        self.matrices_sizes = (self.u.shape[0], *self.s.shape, self.v.shape[1])
         return self
 
     def decode(self):
