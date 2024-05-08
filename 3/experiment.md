@@ -26,7 +26,7 @@
 
 | Исходное                                      | NumPy                                                       | Power                                                        | Block                                                          |
 |-----------------------------------------------|-------------------------------------------------------------|--------------------------------------------------------------|----------------------------------------------------------------|
-| ![simple-color.bmp](3/images/4k24/4k24.bmp)   | ![simple-color.bmp](3/images/4k24/4k24_np_decompressed.bmp) | ![simple-color.bmp](3/images/4k24/4k24_pow_decompressed.bmp) | ![simple-color.bmp](3/images/4k24/4k24_block_decompressed.bmp) |
+| ![simple-color.bmp](images/4k24/4k24.bmp)   | ![simple-color.bmp](images/4k24/4k24_np_decompressed.bmp) | ![simple-color.bmp](images/4k24/4k24_pow_decompressed.bmp) | ![simple-color.bmp](images/4k24/4k24_block_decompressed.bmp) |
 
 Можно заметить, что `Power` заметно проигрывает двум другим. У него получилось очень шумное изображение. `Block` и `NumPy` методы примерно одинаковые, 
 хотя мне кажется, что у `Block` метода всё-таки немного более шумное изображение, чем у `NumPy`
@@ -35,7 +35,7 @@
 
 | Исходное                                      | NumPy                                                       | Power                                                        | Block                                                          |
 |-----------------------------------------------|-------------------------------------------------------------|--------------------------------------------------------------|----------------------------------------------------------------|
-| ![simple-color.bmp](3/images/frog/frog.bmp)   | ![simple-color.bmp](3/images/frog/frog_np_decompressed.bmp) | ![simple-color.bmp](3/images/frog/frog_pow_decompressed.bmp) | ![simple-color.bmp](3/images/frog/frog_block_decompressed.bmp) |
+| ![simple-color.bmp](images/frog/frog.bmp)   | ![simple-color.bmp](images/frog/frog_np_decompressed.bmp) | ![simple-color.bmp](images/frog/frog_pow_decompressed.bmp) | ![simple-color.bmp](images/frog/frog_block_decompressed.bmp) |
 
 Ситуация схожая с предыдущим примером. С надписями все три метода справились одинаково хорошо, в то время как лягушка чуть-чуть шумнее у `Power` метода, 
 чем у двух других
@@ -44,7 +44,7 @@
 
 | Исходное                                                      | NumPy                                                                         | Power                                                                          | Block                                                                            |
 |---------------------------------------------------------------|-------------------------------------------------------------------------------|--------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| ![simple-color.bmp](3/images/high_contrast/high_contrast.bmp) | ![simple-color.bmp](3/images/high_contrast/high_contrast_np_decompressed.bmp) | ![simple-color.bmp](3/images/high_contrast/high_contrast_pow_decompressed.bmp) | ![simple-color.bmp](3/images/high_contrast/high_contrast_block_decompressed.bmp) |
+| ![simple-color.bmp](images/high_contrast/high_contrast.bmp) | ![simple-color.bmp](images/high_contrast/high_contrast_np_decompressed.bmp) | ![simple-color.bmp](images/high_contrast/high_contrast_pow_decompressed.bmp) | ![simple-color.bmp](images/high_contrast/high_contrast_block_decompressed.bmp) |
 
 Заметим, что в левой и правой частях изображения появились полосы, которые немного менее выражены у `Power` метода, что несомненно является плюсом.
 Однако, с надписью все три метода справились одинаково плохо, особенно с буквой М, потому что в исходном изображение там проходит черная полоса. А обводка 
@@ -54,7 +54,7 @@
 
 | Исходное                                | NumPy                                                   | Power                                                    | Block                                                      |
 |-----------------------------------------|---------------------------------------------------------|----------------------------------------------------------|------------------------------------------------------------|
-| ![simple-color.bmp](3/images/me/me.bmp) | ![simple-color.bmp](3/images/me/me_np_decompressed.bmp) | ![simple-color.bmp](3/images/me/me_pow_decompressed.bmp) | ![simple-color.bmp](3/images/me/me_block_decompressed.bmp) |
+| ![simple-color.bmp](images/me/me.bmp) | ![simple-color.bmp](images/me/me_np_decompressed.bmp) | ![simple-color.bmp](images/me/me_pow_decompressed.bmp) | ![simple-color.bmp](images/me/me_block_decompressed.bmp) |
 
 В данном примере, как мне кажется, `NumPy` метод показал себя намного лучше двух других. `Power` метод очень зашакалил изображение и опять появилось много шумов.
 `Block` метод показал себя получше, чем `Power`, однако хуже, чем `NumPy`. Прошу обратить внимание на подбородок персонажа. В `NumPy` ярко выражен подбородок и 
@@ -63,10 +63,29 @@
 
 ### Кадр из мультфильма с персонажем и множеством мелких деталей моно
 
+| Исходное                                        | NumPy                                                           | Power                                                            | Block                                                              |
+|-------------------------------------------------|-----------------------------------------------------------------|------------------------------------------------------------------|--------------------------------------------------------------------|
+| ![simple-color.bmp](images/monkey/monkey.bmp) | ![simple-color.bmp](images/monkey/monkey_np_decompressed.bmp) | ![simple-color.bmp](images/monkey/monkey_pow_decompressed.bmp) | ![simple-color.bmp](images/monkey/monkey_block_decompressed.bmp) |
+
+Тут сложно выявить лидера или аутсайдера, по моему мнению, все картинки выглядят максимально плохо
+
 ### Низкокачественное цветное изображение крупным планом
 
 | Исходное                                        | NumPy                                                           | Power                                                            | Block                                                              |
 |-------------------------------------------------|-----------------------------------------------------------------|------------------------------------------------------------------|--------------------------------------------------------------------|
-| ![simple-color.bmp](3/images/monkey/monkey.bmp) | ![simple-color.bmp](3/images/monkey/monkey_np_decompressed.bmp) | ![simple-color.bmp](3/images/monkey/monkey_pow_decompressed.bmp) | ![simple-color.bmp](3/images/monkey/monkey_block_decompressed.bmp) |
+| ![simple-color.bmp](images/me_mono/me_mono.bmp) | ![simple-color.bmp](images/me_mono/me_mono_np_decompressed.bmp) | ![simple-color.bmp](images/me_mono/me_mono_pow_decompressed.bmp) | ![simple-color.bmp](images/me_mono/me_mono_block_decompressed.bmp) |
 
-Тут сложно выявить лидера или аутсайдера, по моему мнению, все картинки выглядят максимально плохо
+Заметим, что отсутствие цветов уравнивает шансы всех методов, тут уже не видно сильного шума от `Power` метода или проигрыша `Block` метода при работе с тенями. Смею утдверждать, что в данном случае метода +- равны
+
+## Выводы
+
+Можно выявить следующие отличительные черты алгоритмов:
+- Алгоритмы плохо справляются с цветными изображениями, на которых есть сложные объекты, например, персонажи или животные
+- Алгоритмы справляются довольно хорошо с текстом и простыми объектами
+- Алгоритмы легко запутать, добавив оттенки похоже цвета рядом, с каким-то объектом или текстом(тени у шрека, надпись в высококонтрастном изображении)
+- `Power` метод в среднем имеет больше шумов, чем остальные
+
+Алгоритмы можно поставить в топ:
+- `NumPy` - очень быстро работает, лучшее качество
+- `Block` - достойное качество, медленно работает
+- `Power` - медленно работает, очень много шумов
