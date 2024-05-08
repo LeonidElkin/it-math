@@ -1,4 +1,4 @@
-#Basic Representation Unified Helper
+# Basic Representation Unified Helper
 
 `BRUH` хранит в себе сжатое 24 битное `BMP` изображение, которое он может получсить из файла с `.bruh` расширением или из самого изображения. 
 Сжатие производится посредством одного из трех SVD алгоритмов, которые можно выбрать вручную: `NumPy(Np)`, `Power Method(Pow)`, `Block Power Method(Block)`
@@ -16,7 +16,7 @@
 | green channel      | svd format | svd data size | SVD запакованное в байт стрим(смотрите ниже)                  |
 | blue channel       | svd format | svd data size | SVD запакованное в байт стрим(смотрите ниже)                  |
 
-##Структура SVD
+## Структура SVD
 
 | Name     | Format | Size in bytes      | Value                     |
 |----------|--------|--------------------|---------------------------|
